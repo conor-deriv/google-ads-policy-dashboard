@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -165,10 +166,6 @@
     </div>
     <div class="upload-section">
       <span class="data-source" id="dataSource"></span>
-      <button class="btn-refresh" id="btnRefresh" onclick="fetchFromSheet()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        Refresh
-      </button>
       <button class="btn-upload" onclick="document.getElementById('fileInput').click()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Upload CSV
@@ -201,7 +198,7 @@
   </div>
   <div class="loading-overlay" id="loadingOverlay">
     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-    <p>Loading data from Google Sheets...</p>
+    <p>Loading data...</p>
   </div>
   <div class="campaign-list" id="campaignList"></div>
 </div>
@@ -210,7 +207,6 @@
 
 let RAW_DATA = [];
 
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRfZISGH09WvQ5nzkqiGL0ajKIcFuLASiRob5G0DDQ0LrOJJmsOxpCrYEBZNORLcAPXsrZ6bTb8UEsF/pub?gid=957385604&single=true&output=csv";
 
 const TOPIC_LABELS = {
   DESTINATION_NOT_WORKING: "Destination Not Working",
@@ -227,50 +223,9 @@ const removedState = {};
 const expandedState = {};
 
 function init() {
-  fetchFromSheet();
-}
-
-function fetchFromSheet() {
-  var btn = document.getElementById('btnRefresh');
-  var overlay = document.getElementById('loadingOverlay');
-  var source = document.getElementById('dataSource');
-  btn.classList.add('loading');
-  if (RAW_DATA.length === 0) overlay.classList.add('active');
-
-  fetch(SHEET_CSV_URL + '&_t=' + Date.now())
-    .then(function(res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.text();
-    })
-    .then(function(csvText) {
-      var data = csvToData(csvText);
-      if (data === null || data.length === 0) {
-        showToast('No valid rows found in Sheet', true);
-        return;
-      }
-      RAW_DATA = data;
-      populateRegions();
-      populateCountries();
-      populatePolicyFilter();
-      render();
-      var now = new Date();
-      var timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      document.getElementById('headerSub').textContent = 'Live from Google Sheets \u2014 ' + data.length + ' rows';
-      source.innerHTML = '<span class="dot"></span> Synced ' + timeStr;
-      showToast('Loaded ' + data.length + ' rows from Google Sheets');
-    })
-    .catch(function(err) {
-      showToast('Failed to fetch Sheet: ' + err.message + '. Try drag-and-drop instead.', true);
-      if (RAW_DATA.length === 0) {
-        document.getElementById('headerSub').textContent = 'Drag and drop a CSV to get started';
-        document.getElementById('campaignList').innerHTML = '<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><p>Could not connect to Google Sheets. Drag and drop a CSV file to load data.</p></div>';
-      }
-      source.innerHTML = '<span style="color:#dc2626">Offline</span>';
-    })
-    .finally(function() {
-      btn.classList.remove('loading');
-      overlay.classList.remove('active');
-    });
+  document.getElementById('headerSub').textContent = 'Upload a CSV to get started';
+  document.getElementById('campaignList').innerHTML = '<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><p>Drag and drop a CSV file here, or click <strong>Upload CSV</strong> above.</p></div>';
+  document.getElementById('dataSource').innerHTML = '<span style="color:#9ca3af">No data loaded</span>';
 }
 
 function populateRegions() {
